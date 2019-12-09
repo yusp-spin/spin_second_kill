@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title >商城高并发抢单-商品列表</title>
+</head>
+<body>
+
+<div class="container">
+    <div class="panel panel-default">
+        <div class="panel-heading text-center">
+            <h2 th:align="center">商城高并发抢单-秒杀商品列表</h2>
+        </div>
+
+        <div class="panel-body">
+            <table class="table table-hover" align="center" border="2">
+                <thead>
+                <tr>
+                    <td style="font-size: 15px"><strong style="color: red">商品名称</strong></td>
+                    <td style="font-size: 15px"><strong style="color: red">剩余数量</strong></td>
+                    <!--<td style="font-size: 15px"><strong style="color: red">开始时间</strong></td>-->
+                    <!--<td style="font-size: 15px"><strong style="color: red">结束时间</strong></td>-->
+                    <td style="font-size: 15px"><strong style="color: red">查看详情</strong></td>
+                </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="l:${list}">
+                        <td th:text="${l.itemName}"></td>
+                        <td th:text="${l.total}"></td>
+                        <!--<td th:text="${l.startTime}"></td>-->
+                        <!--<td th:text="${l.endTime}"></td>-->
+                        <!--<td th:text="${#dates.format(l.startTime,'dd/MMM/yyyy HH:mm')}"></td>-->
+                        <!--<td th:text="${#dates.format(l.endTime,'dd/MMM/yyyy HH:mm')}"></td>-->
+                        <td
+                        th:if="${l.canKill==1}">
+                            <a class="btn btn-info" th:href="@{'/item/detail/'+${l.id}}" target="_blank">详情</a>
+                        </td>
+                        <td
+                        th:if="${l.canKill!=1}">
+                            <a class="btn btn-info">哈哈~商品已抢购完毕或者不在抢购时间段哦!</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+<script type="text/javascript" th:src="@{../../static/plugins/jquery.js}"></script>
+<script type="text/javascript" th:src="@{../../static/plugins/bootstrap-3.3.0/js/bootstrap.js}" ></script>
+</html>
+
+
+
+
+
+
+
+
+

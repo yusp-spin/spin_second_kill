@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<script type="text/javascript" th:src="@{../../static/plugins/jquery.js}"></script>
+<script type="text/javascript" th:src="@{../../static/plugins/jquery.cookie.min.js}"></script>
+<script type="text/javascript" th:src="@{../../static/plugins/jquery.countdown.min.js}"></script>
+<script type="text/javascript" th:src="@{https://code.jquery.com/jquery-3.0.0.min.js}"></script>
+<script type="text/javascript" th:src="@{../../static/plugins/bootstrap-3.3.0/js/bootstrap.min.js}"></script>
+<script type="text/javascript" th:src="@{../../static/js/info.js}"></script>
+<head>
+    <title>商城高并发抢购-商品详情页面</title>
+</head>
+<body>
+<div class="container" th:align="center">
+    <div class="panel panel-default">
+        <input th:id="killId" th:value="${detail.id}" type="hidden"/>
+        <div class="panel-heading">
+            <h1 th:text="'商品名称:'+${detail.itemName}"></h1>
+        </div>
+        <div class="panel-body">
+            <h2 class="text-danger" th:text="'剩余数量:'+${detail.total}"></h2>
+        </div>
+        <!--<div class="panel-body">-->
+            <!--<h2 class="text-danger" th:text="'开始时间：'+${detail.startTime}"></h2>-->
+        <!--</div>-->
+        <!--<div class="panel-body">-->
+            <!--<h2 class="text-danger" th:text="'结束时间：'+${detail.startTime}"></h2>-->
+        <!--</div>-->
+    </div>
+
+    <td th:if="${detail.canKill==1}">
+        <!--<button class="btn btn-info" th:onclick="'javascript:executeKill()'">抢购</button>-->
+        <a class="btn btn-info" th:href="@{'/kill/execute/'+${detail.id}+'/10'}" >抢购</a>
+    </td>
+    <td th:if="${detail.canKill!=1}">
+        <a class="btn btn-info">哈哈~商品已抢购完毕或者不在抢购时间段哦!</a>
+    </td>
+</div>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
