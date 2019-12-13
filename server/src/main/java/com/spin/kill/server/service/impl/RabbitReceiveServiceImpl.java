@@ -5,6 +5,7 @@ import com.spin.kill.server.dto.MailDto;
 import com.spin.kill.server.entity.ItemKillSuccess;
 import com.spin.kill.server.mapper.ItemKillSuccessMapper;
 import com.spin.kill.server.service.MailService;
+import com.spin.kill.server.service.RabbitReceiveService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -13,7 +14,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RabbitReceiveServiceImpl {
+public class RabbitReceiveServiceImpl implements RabbitReceiveService {
     public static final Logger log= LoggerFactory.getLogger(RabbitReceiveServiceImpl.class);
 
     @Autowired

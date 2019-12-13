@@ -26,6 +26,15 @@ public class ItemKill {
     //采用服务器时间控制是否可以进行抢购
     private Integer canKill;
 
+    private Integer version;
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
 
     public Integer getId() {
         return id;
@@ -111,6 +120,7 @@ public class ItemKill {
                 ", createTime=" + createTime +
                 ", itemName='" + itemName + '\'' +
                 ", canKill=" + canKill +
+                ", version=" + version +
                 '}';
     }
 }

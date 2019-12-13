@@ -2,8 +2,6 @@ package com.spin.kill.server.utils;
 
 /**
  * 雪花算法
- * @author: zhonglinsen
- * @date: 2019/5/20
  */
 public class SnowFlake {
 

@@ -1,11 +1,6 @@
-package com.spin.kill.server.enums;/**
- * Created by Administrator on 2019/6/17.
- */
-
+package com.spin.kill.server.enums;
 /**
  * 系统级别的常量
- * @Author:debug (SteadyJack)
- * @Date: 2019/6/17 22:48
  **/
 public class SysConstant {
 

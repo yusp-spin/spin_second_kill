@@ -1,6 +1,4 @@
-package com.spin.kill.server.dto;/**
- * Created by Administrator on 2019/6/21.
- */
+package com.spin.kill.server.dto;
 
 import com.spin.kill.server.entity.ItemKillSuccess;
 import lombok.Data;
@@ -8,8 +6,7 @@ import lombok.Data;
 import java.io.Serializable;
 
 /**
- * @Author:debug (SteadyJack)
- * @Date: 2019/6/21 22:02
+ * @Author:spin
  **/
 //继承了ItemKillSuccess就不用写那些字段了
 @Data

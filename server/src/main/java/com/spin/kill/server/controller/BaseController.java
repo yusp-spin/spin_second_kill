@@ -1,6 +1,4 @@
-package com.spin.kill.server.controller;/**
- * Created by Administrator on 2019/6/13.
- */
+package com.spin.kill.server.controller;
 
 import com.spin.kill.api.enums.StatusCode;
 import com.spin.kill.api.response.BaseResponse;
@@ -16,8 +14,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  * 基础controller
- * @Author:debug (SteadyJack)
- * @Date: 2019/6/13 23:36
+ * @Author:spin
+ * @Date: 2019/12/10
  **/
 @Controller
 @RequestMapping("base")

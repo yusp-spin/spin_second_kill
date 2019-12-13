@@ -60,11 +60,11 @@ public interface ItemKillSuccessMapper {
             "    </trim>")
     int insertSelective(ItemKillSuccess record);
 
+    @Select("select \n" +
+            "    code, item_id, kill_id, user_id, status, create_time \n" +
+            "    from item_kill_success\n" +
+            "    where code = #{code,jdbcType=VARCHAR}")
     ItemKillSuccess selectByPrimaryKey(String code);
-
-    int updateByPrimaryKeySelective(ItemKillSuccess record);
-
-    int updateByPrimaryKey(ItemKillSuccess record);
 
     @Select("SELECT\n" +
             "        COUNT(1) AS total\n" +
@@ -89,7 +89,36 @@ public interface ItemKillSuccessMapper {
             "          AND b.is_active = 1")
     KillSuccessUserInfo selectByCode(@Param("code") String code);
 
+    @Select(" SELECT\n" +
+            "      a.*,\n" +
+            "      b.user_name,\n" +
+            "      b.phone,\n" +
+            "      b.email,\n" +
+            "      c.name AS itemName\n" +
+            "    FROM item_kill_success AS a\n" +
+            "      LEFT JOIN user b ON b.id = a.user_id\n" +
+            "      LEFT JOIN item c ON c.id = a.item_id\n" +
+            "    WHERE a.kill_id = #{kill_id} and a.user_id=#{user_id}\n" +
+            "          AND b.is_active = 1")
+    KillSuccessUserInfo selectByKillIdAndUserId(@Param("kill_id") String killId,@Param("user_id") String userId);
+
+    @Update("UPDATE item_kill_success\n" +
+            "    SET status = -1\n" +
+            "    WHERE code = #{code} AND status = 0")
     int expireOrder(@Param("code") String code);
 
+    @Update("UPDATE item_kill_success\n" +
+            "    SET status = 1\n" +
+            "    WHERE code = #{code} AND status = 0")
+    int payOrder(@Param("code") String code);
+
+
+
+    @Select("SELECT\n" +
+            "        a.*,TIMESTAMPDIFF(MINUTE,a.create_time,NOW()) AS diffTime\n" +
+            "    FROM\n" +
+            "        item_kill_success AS a\n" +
+            "    WHERE\n" +
+            "        a.`status` = 0")
     List<ItemKillSuccess> selectExpireOrders();
 }

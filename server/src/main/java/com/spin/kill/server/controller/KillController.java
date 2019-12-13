@@ -1,32 +1,26 @@
-package com.spin.kill.server.controller;/**
- * Created by Administrator on 2019/6/17.
- */
+package com.spin.kill.server.controller;
 
 import com.spin.kill.api.enums.StatusCode;
 import com.spin.kill.api.response.BaseResponse;
 import com.spin.kill.server.dto.KillDto;
 import com.spin.kill.server.dto.KillSuccessUserInfo;
+import com.spin.kill.server.entity.ItemKillSuccess;
 import com.spin.kill.server.mapper.ItemKillSuccessMapper;
 
 import com.spin.kill.server.service.KillService;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 
 /**
  * 秒杀controller
- * @Author:debug (SteadyJack)
- * @Date: 2019/6/17 22:14
+ * @Author:spin
  **/
 @Controller
 @RequestMapping("kill")
@@ -41,10 +35,44 @@ public class KillController {
     @Autowired
     private ItemKillSuccessMapper itemKillSuccessMapper;
 
-    @RequestMapping("/aa")
-    @ResponseBody
-    public String test(){
-        return "kill";
+//    @RequestMapping("/aa")
+//    @ResponseBody
+//    public String test(){
+//        return "kill";
+//    }
+
+    /**
+     * 订单详情
+     * @param killId
+     * @param userId
+     * @param modelMap
+     * @return
+     */
+    @RequestMapping("/record/detail/{killId}/{userId}")
+    public String killRecordDetail(@PathVariable String killId, @PathVariable String userId, ModelMap modelMap){
+        if(StringUtils.isBlank(killId)||StringUtils.isBlank(userId)){
+            return "error";
+        }
+        KillSuccessUserInfo info = itemKillSuccessMapper.selectByKillIdAndUserId(killId,userId);
+        if(info==null){
+            return "error";
+        }
+        modelMap.addAttribute("killId",killId);
+        modelMap.addAttribute("userId",userId);
+        modelMap.addAttribute("info",info);
+        return "/pages/killRecord";
+    }
+
+    @RequestMapping("/pay/{code}/{killId}/{userId}")
+    public String payOrder(@PathVariable String code,@PathVariable String killId, @PathVariable String userId, ModelMap modelMap){
+        if(StringUtils.isBlank(killId)||StringUtils.isBlank(userId)||StringUtils.isBlank(code)){
+            return "error";
+        }
+        ItemKillSuccess entity=itemKillSuccessMapper.selectByPrimaryKey(code);
+        if (entity!=null && entity.getStatus().intValue()==0){
+            itemKillSuccessMapper.payOrder(code);
+        }
+        return "redirect:/kill/record/detail/"+killId+"/"+userId;
     }
 
 
@@ -52,6 +80,7 @@ public class KillController {
      * 商品秒杀核心业务逻辑
      * @param
      * @return
+     * count为一次购买的数量
      */
     @RequestMapping("/execute/{killId}/{userId}")
     @ResponseBody
@@ -60,19 +89,12 @@ public class KillController {
         if (killId<=0){
             return "商品不存在";
         }
-//        Object uId=session.getAttribute("uid");
-//        if (uId==null){
-//            return new BaseResponse(StatusCode.UserNotLogin);
-//        }
-        //Integer userId=dto.getUserId();
-//        Integer userId= (Integer)uId ;
-
-//        BaseResponse response=new BaseResponse(StatusCode.Success);
         String result="<br><br><h3 align=\"center\" color=\"green\">恭喜你成功抢购该商品！！！！</h3>" +
-                "<h4 align=\"center\">请您登陆邮箱验证连接信息并在一小时内完成相关支付</h4>";
+                "<h4 align=\"center\">请您查看邮箱验证连接信息并在一小时内完成相关支付</h4>" +
+                "<br><h4 align=\"center\"><a href=\"/kill/record/detail/"+killId+"/"+userId+"\">查看订单</a></h4>";
         try {
             //Boolean res=killService.killItem(dto.getKillId(),userId);
-            Boolean res=killService.killItem(killId,userId);
+            Boolean res=killService.killItem1(killId,userId);
             if (!res){
                 return "哈哈~商品已抢购完毕或者不在抢购时间段哦!";
             }
@@ -84,6 +106,153 @@ public class KillController {
     }
 
 
+    /***
+     * 商品秒杀核心业务逻辑——用于压力测试
+     * @param
+     * @return
+     */
+    @PostMapping("/execute/lock/{killId}/{userId}")
+    @ResponseBody
+    public String executeLock(@PathVariable int killId,@PathVariable int userId,  HttpSession session){
+//        System.out.println("aaa");
+        if (killId<=0){
+            return "商品不存在";
+        }
+        String result="<br><br><h3 align=\"center\" color=\"green\">恭喜你成功抢购该商品！！！！</h3>" +
+                "<h4 align=\"center\">请您查看邮箱验证连接信息并在一小时内完成相关支付</h4>" +
+                "<br><h4 align=\"center\"><a href=\"/kill/record/detail/"+killId+"/"+userId+"\">查看订单</a></h4>";
+
+        //不加分布式锁
+        try {
+            //Boolean res=killService.killItem(dto.getKillId(),userId);
+            Boolean res=killService.killItem1(killId,userId);
+            if (!res){
+                return "哈哈~商品已抢购完毕或者不在抢购时间段哦!";
+            }
+        }catch (Exception e){
+//            response=new BaseResponse(StatusCode.Fail.getCode(),e.getMessage());
+            result="<br><br><h3 align=\"center\" color=\"red\">抢购失败啦</h3>";
+        }
+        return result;
+    }
+
+
+
+    /***
+     * 商品秒杀核心业务逻辑——用于压力测试 加了redis分布式锁
+     * @param
+     * @return
+     */
+    @PostMapping("/execute/redislock/{killId}/{userId}")
+    @ResponseBody
+    public String executeRedisLock(@PathVariable int killId,@PathVariable int userId,  HttpSession session){
+//        System.out.println("aaa");
+        if (killId<=0){
+            return "商品不存在";
+        }
+        String result="<br><br><h3 align=\"center\" color=\"green\">恭喜你成功抢购该商品！！！！</h3>" +
+                "<h4 align=\"center\">请您查看邮箱验证连接信息并在一小时内完成相关支付</h4>" +
+                "<br><h4 align=\"center\"><a href=\"/kill/record/detail/"+killId+"/"+userId+"\">查看订单</a></h4>";
+        //加redis分布式锁
+        try {
+            //Boolean res=killService.killItem(dto.getKillId(),userId);
+            Boolean res=killService.killItem2(killId,userId);
+            if (!res){
+                return "哈哈~商品已抢购完毕或者不在抢购时间段哦!";
+            }
+        }catch (Exception e){
+//            response=new BaseResponse(StatusCode.Fail.getCode(),e.getMessage());
+            result="<br><br><h3 align=\"center\" color=\"red\">抢购失败啦</h3>";
+        }
+        return result;
+    }
+
+    /***
+     * 商品秒杀核心业务逻辑——用于压力测试 加了redis集群分布式锁
+     * @param
+     * @return
+     */
+    @PostMapping("/execute/redisClusterLock/{killId}/{userId}")
+    @ResponseBody
+    public String executeRedisClusterLock(@PathVariable int killId,@PathVariable int userId,  HttpSession session){
+//        System.out.println("aaa");
+        if (killId<=0){
+            return "商品不存在";
+        }
+        String result="<br><br><h3 align=\"center\" color=\"green\">恭喜你成功抢购该商品！！！！</h3>" +
+                "<h4 align=\"center\">请您查看邮箱验证连接信息并在一小时内完成相关支付</h4>" +
+                "<br><h4 align=\"center\"><a href=\"/kill/record/detail/"+killId+"/"+userId+"\">查看订单</a></h4>";
+        //加redis集群分布式锁
+        try {
+            //Boolean res=killService.killItem(dto.getKillId(),userId);
+            Boolean res=killService.killItem3(killId,userId);
+            if (!res){
+                return "哈哈~商品已抢购完毕或者不在抢购时间段哦!";
+            }
+        }catch (Exception e){
+//            response=new BaseResponse(StatusCode.Fail.getCode(),e.getMessage());
+            result="<br><br><h3 align=\"center\" color=\"red\">抢购失败啦</h3>";
+        }
+        return result;
+    }
+
+
+    /***
+     * 商品秒杀核心业务逻辑——用于压力测试 加了redission分布式锁
+     * @param
+     * @return
+     */
+    @PostMapping("/execute/redissionLock/{killId}/{userId}")
+    @ResponseBody
+    public String executeRedissionLock(@PathVariable int killId,@PathVariable int userId,  HttpSession session){
+//        System.out.println("aaa");
+        if (killId<=0){
+            return "商品不存在";
+        }
+        String result="<br><br><h3 align=\"center\" color=\"green\">恭喜你成功抢购该商品！！！！</h3>" +
+                "<h4 align=\"center\">请您查看邮箱验证连接信息并在一小时内完成相关支付</h4>" +
+                "<br><h4 align=\"center\"><a href=\"/kill/record/detail/"+killId+"/"+userId+"\">查看订单</a></h4>";
+        //加redission分布式锁
+        try {
+            //Boolean res=killService.killItem(dto.getKillId(),userId);
+            Boolean res=killService.killItem4(killId,userId);
+            if (!res){
+                return "哈哈~商品已抢购完毕或者不在抢购时间段哦!";
+            }
+        }catch (Exception e){
+//            response=new BaseResponse(StatusCode.Fail.getCode(),e.getMessage());
+            result="<br><br><h3 align=\"center\" color=\"red\">抢购失败啦</h3>";
+        }
+        return result;
+    }
+
+    /***
+     * 商品秒杀核心业务逻辑——用于压力测试 加了Zookeeper分布式锁
+     * @param
+     * @return
+     */
+    @PostMapping("/execute/zkLock/{killId}/{userId}")
+    @ResponseBody
+    public String executeZookeeperLock(@PathVariable int killId,@PathVariable int userId,  HttpSession session){
+//        System.out.println("aaa");
+        if (killId<=0){
+            return "商品不存在";
+        }
+        String result="<br><br><h3 align=\"center\" color=\"green\">恭喜你成功抢购该商品！！！！</h3>" +
+                "<h4 align=\"center\">请您查看邮箱验证连接信息并在一小时内完成相关支付</h4>" +
+                "<br><h4 align=\"center\"><a href=\"/kill/record/detail/"+killId+"/"+userId+"\">查看订单</a></h4>";
+        //加Zookeeper分布式锁
+        try {
+            Boolean res=killService.killItem5(killId,userId);
+            if (!res){
+                return "哈哈~商品已抢购完毕或者不在抢购时间段哦!";
+            }
+        }catch (Exception e){
+//            response=new BaseResponse(StatusCode.Fail.getCode(),e.getMessage());
+            result="<br><br><h3 align=\"center\" color=\"red\">抢购失败啦</h3>";
+        }
+        return result;
+    }
 
 
 

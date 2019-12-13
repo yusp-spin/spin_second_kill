@@ -12,8 +12,6 @@ import org.springframework.core.env.Environment;
 
 /**
  * ZooKeeper组件自定义配置
- * @Author:debug (SteadyJack)
- * @Date: 2019/7/2 14:38
  **/
 @Configuration
 public class ZooKeeperConfig {

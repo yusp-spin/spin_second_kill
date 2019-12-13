@@ -1,14 +1,16 @@
 package com.spin.kill.server.service.impl;
 
 import com.spin.kill.server.dto.KillSuccessUserInfo;
-import com.spin.kill.server.entity.ItemKillSuccess;
 import com.spin.kill.server.mapper.ItemKillSuccessMapper;
 import com.spin.kill.server.service.RabbitSenderService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.AmqpException;
-import org.springframework.amqp.core.*;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageDeliveryMode;
+import org.springframework.amqp.core.MessagePostProcessor;
+import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.AbstractJavaTypeMapper;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -58,6 +60,39 @@ public class RabbitSenderServiceImpl implements RabbitSenderService {
         }catch (Exception e){
             log.error("秒杀成功异步发送邮件通知消息-发送异常，消息为：{}",orderNo,e.fillInStackTrace());
         }
-
     }
+
+    /**
+     * 秒杀成功后生成抢购订单-发送信息入死信队列，等待着一定时间失效超时未支付的订单
+     * @param orderCode
+     */
+    public void sendKillSuccessOrderExpireMsg(final String orderCode){
+        try {
+            if (StringUtils.isNotBlank(orderCode)){
+                KillSuccessUserInfo info=itemKillSuccessMapper.selectByCode(orderCode);
+                if (info!=null){
+                    rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
+                    rabbitTemplate.setExchange(env.getProperty("mq.kill.item.success.kill.dead.prod.exchange"));
+                    rabbitTemplate.setRoutingKey(env.getProperty("mq.kill.item.success.kill.dead.prod.routing.key"));
+                    rabbitTemplate.convertAndSend(info, new MessagePostProcessor() {
+                        @Override
+                        public Message postProcessMessage(Message message) throws AmqpException {
+                            MessageProperties mp=message.getMessageProperties();
+                            mp.setDeliveryMode(MessageDeliveryMode.PERSISTENT);
+                            mp.setHeader(AbstractJavaTypeMapper.DEFAULT_CONTENT_CLASSID_FIELD_NAME,KillSuccessUserInfo.class);
+
+                            //TODO：动态设置TTL(为了测试方便，暂且设置10s)
+                            mp.setExpiration(env.getProperty("mq.kill.item.success.kill.expire"));
+                            return message;
+                        }
+                    });
+                }
+            }
+        }catch (Exception e){
+            log.error("秒杀成功后生成抢购订单-发送信息入死信队列，等待着一定时间失效超时未支付的订单-发生异常，消息为：{}",orderCode,e.fillInStackTrace());
+        }
+    }
+
 }
+
+

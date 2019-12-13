@@ -1,6 +1,4 @@
-package com.spin.kill.server.config;/**
- * Created by Administrator on 2019/7/2.
- */
+package com.spin.kill.server.config;
 
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
@@ -12,8 +10,8 @@ import org.springframework.core.env.Environment;
 
 /**
  * redisson通用化配置
- * @Author:debug (SteadyJack)
- * @Date: 2019/7/2 10:57
+ * @Author:spin
+ * @Date: 2019/12/12 10:57
  **/
 @Configuration
 public class RedissonConfig {

@@ -1,6 +1,4 @@
-package com.spin.kill.server.config;/**
- * Created by Administrator on 2019/7/2.
- */
+package com.spin.kill.server.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -13,8 +11,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /**
  * redis的通用配置
- * @Author:debug (SteadyJack)
- * @Date: 2019/7/2 10:17
  **/
 @Configuration
 public class RedisConfig {

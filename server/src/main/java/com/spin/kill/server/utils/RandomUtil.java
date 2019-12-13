@@ -1,7 +1,5 @@
 package com.spin.kill.server.utils;
-/**
- * Created by Administrator on 2019/6/20.
- */
+
 
 import org.joda.time.DateTime;
 import java.text.SimpleDateFormat;
@@ -10,8 +8,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * 随机数生成util
- * @Author:debug (SteadyJack)
- * @Date: 2019/6/20 21:05
  **/
 public class RandomUtil {
 
